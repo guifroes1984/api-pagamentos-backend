@@ -9,15 +9,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.guifroes1984.api.pagamentos.model.Categoria;
 import br.com.guifroes1984.api.pagamentos.repository.CategoriaRepository;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/categorias")
+@Api(value = "Categoria", description = "Operações relacionadas às categorias")
 public class CategoriaResource {
 
 	@Autowired
 	private CategoriaRepository categoriaRepository;
 
 	@GetMapping
+	@ApiOperation(value = "Lista todas as categorias", response = List.class)
 	public List<Categoria> listar() {
 		return categoriaRepository.findAll();
 	}
