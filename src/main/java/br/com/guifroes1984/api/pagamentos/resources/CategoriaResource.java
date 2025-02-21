@@ -1,4 +1,4 @@
-package br.com.guifroes1984.api.pagamentos.resouces;
+package br.com.guifroes1984.api.pagamentos.resources;
 
 import java.net.URI;
 import java.util.List;

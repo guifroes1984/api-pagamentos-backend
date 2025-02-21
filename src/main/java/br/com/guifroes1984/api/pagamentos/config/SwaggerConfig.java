@@ -18,7 +18,7 @@ public class SwaggerConfig {
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("br.com.guifroes1984.api.pagamentos.resouces"))
+                .apis(RequestHandlerSelectors.basePackage("br.com.guifroes1984.api.pagamentos.resources"))
                 .paths(PathSelectors.any())
                 .build()
                 .apiInfo(apiInfo());
