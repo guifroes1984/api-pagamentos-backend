@@ -25,6 +25,7 @@ import br.com.guifroes1984.api.pagamentos.exceptionhandler.ExceptionHandler.Erro
 import br.com.guifroes1984.api.pagamentos.model.Categoria;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
 import br.com.guifroes1984.api.pagamentos.repository.LancamentoRepository;
+import br.com.guifroes1984.api.pagamentos.repository.filter.LancamentoFilter;
 import br.com.guifroes1984.api.pagamentos.service.LancamentoService;
 import br.com.guifroes1984.api.pagamentos.service.exception.PessoaInexistenteOuInativaException;
 import io.swagger.annotations.Api;
@@ -48,9 +49,9 @@ public class LancamentoResource {
 	private MessageSource messageSource;
 	
 	@GetMapping
-	@ApiOperation(value = "Lista todos os lançamentos", response = List.class)
-	public List<Lancamento> listar() {
-		return lancamentoRepository.findAll();
+	@ApiOperation(value = "Pesquisa todos os lançamentos", response = List.class)
+	public List<Lancamento> pesquisar(LancamentoFilter lancamentoFilter) {
+		return lancamentoRepository.filtrar(lancamentoFilter);
 	}
 	
 	@GetMapping("/{codigo}")
