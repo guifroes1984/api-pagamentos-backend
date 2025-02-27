@@ -1,5 +1,6 @@
 package br.com.guifroes1984.api.pagamentos.resources;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -7,8 +8,11 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,9 +21,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.guifroes1984.api.pagamentos.event.RecursoCriadoEvent;
+import br.com.guifroes1984.api.pagamentos.exceptionhandler.ExceptionHandler.Erro;
 import br.com.guifroes1984.api.pagamentos.model.Categoria;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
 import br.com.guifroes1984.api.pagamentos.repository.LancamentoRepository;
+import br.com.guifroes1984.api.pagamentos.service.LancamentoService;
+import br.com.guifroes1984.api.pagamentos.service.exception.PessoaInexistenteOuInativaException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -32,7 +39,13 @@ public class LancamentoResource {
 	private LancamentoRepository lancamentoRepository;
 	
 	@Autowired
+	private LancamentoService lancamentoService;
+	
+	@Autowired
 	private ApplicationEventPublisher publisher;
+	
+	@Autowired
+	private MessageSource messageSource;
 	
 	@GetMapping
 	@ApiOperation(value = "Lista todos os lançamentos", response = List.class)
@@ -50,9 +63,17 @@ public class LancamentoResource {
 	@PostMapping
 	@ApiOperation(value = "Adiciona um novo lançamento")
 	public ResponseEntity<Lancamento> criar(@Valid @RequestBody Lancamento lancamento, HttpServletResponse response) {
-		Lancamento lancamentoSalvo = lancamentoRepository.save(lancamento);
+		Lancamento lancamentoSalvo = lancamentoService.salvar(lancamento);
 		publisher.publishEvent(new RecursoCriadoEvent(this, response, lancamentoSalvo.getCodigo()));
 		return ResponseEntity.status(HttpStatus.CREATED).body(lancamentoSalvo);
+	}
+	
+	@ExceptionHandler({PessoaInexistenteOuInativaException.class})
+	public  ResponseEntity<Object> handlePessoaInexistenteOuInativaException(PessoaInexistenteOuInativaException ex) {
+		String mensagemUsuario = messageSource.getMessage("pessoa.inexistente-ou-inativa", null, LocaleContextHolder.getLocale());
+		String mensagemDesenvolvedor = ex.toString();
+		List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
+		return ResponseEntity.badRequest().body(erros);
 	}
 
 }
