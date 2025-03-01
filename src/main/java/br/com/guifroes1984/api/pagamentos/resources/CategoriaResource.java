@@ -34,13 +34,13 @@ public class CategoriaResource {
 	private ApplicationEventPublisher publisher;
 
 	@GetMapping
-	@ApiOperation(value = "Lista todas as categorias", response = List.class)
+	@ApiOperation(value = "Endpoint para listar todas as categorias", response = List.class)
 	public List<Categoria> listar() {
 		return categoriaRepository.findAll();
 	}
 
 	@PostMapping
-	@ApiOperation(value = "Adiciona uma nova categoria")
+	@ApiOperation(value = "Endpoint para adicionar uma nova categoria")
 	public ResponseEntity<Categoria> adicionar(@Valid @RequestBody Categoria categoria, HttpServletResponse response) {
 		Categoria categoriaSalva = categoriaRepository.save(categoria);
 		publisher.publishEvent(new RecursoCriadoEvent(this, response, categoriaSalva.getCodigo()));
@@ -48,7 +48,7 @@ public class CategoriaResource {
 	}
 
 	@GetMapping("/{codigo}")
-	@ApiOperation(value = "Busca uma categoria pelo código", response = Categoria.class)
+	@ApiOperation(value = "Endpoint para buscar uma categoria pelo código", response = Categoria.class)
 	public ResponseEntity<Categoria> buscarPeloCodigo(@PathVariable Long codigo) {
 		Categoria categoria = categoriaRepository.findOne(codigo);
 		return categoria != null ? ResponseEntity.ok(categoria) : ResponseEntity.notFound().build();

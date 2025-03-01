@@ -53,20 +53,20 @@ public class LancamentoResource {
 	private MessageSource messageSource;
 	
 	@GetMapping
-	@ApiOperation(value = "Pesquisa todos os lançamentos", response = List.class)
+	@ApiOperation(value = "Endpoint para pesquisar todos os lançamentos", response = List.class)
 	public Page<Lancamento> pesquisar(LancamentoFilter lancamentoFilter, Pageable pageable) {
 		return lancamentoRepository.filtrar(lancamentoFilter, pageable);
 	}
 	
 	@GetMapping("/{codigo}")
-	@ApiOperation(value = "Busca um lançamento pelo código", response = Categoria.class)
+	@ApiOperation(value = "Endpoint para buscar um lançamento pelo código", response = Categoria.class)
 	public ResponseEntity<Lancamento> buscarPeloCodigo(@PathVariable Long codigo) {
 		Lancamento lancamento = lancamentoRepository.findOne(codigo);
 		return lancamento != null ? ResponseEntity.ok(lancamento) : ResponseEntity.notFound().build();
 	}
 	
 	@PostMapping
-	@ApiOperation(value = "Adiciona um novo lançamento")
+	@ApiOperation(value = "Endpoint para adicionar um novo lançamento")
 	public ResponseEntity<Lancamento> criar(@Valid @RequestBody Lancamento lancamento, HttpServletResponse response) {
 		Lancamento lancamentoSalvo = lancamentoService.salvar(lancamento);
 		publisher.publishEvent(new RecursoCriadoEvent(this, response, lancamentoSalvo.getCodigo()));
@@ -75,7 +75,7 @@ public class LancamentoResource {
 	
 	@DeleteMapping("/{codigo}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@ApiOperation(value = "Remove um lançamento pelo código", notes = "Exclui o lançamento do banco de dados pelo código informado.")
+	@ApiOperation(value = "Endpoint para remover um lançamento pelo código", notes = "Exclui o lançamento do banco de dados pelo código informado.")
 	public void remover(@PathVariable Long codigo) {
 		lancamentoRepository.delete(codigo);
 	}

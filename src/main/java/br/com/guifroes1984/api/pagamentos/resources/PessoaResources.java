@@ -42,13 +42,13 @@ public class PessoaResources {
 	private ApplicationEventPublisher publisher;
 
 	@GetMapping
-	@ApiOperation(value = "Lista todas as pessoas", response = List.class)
+	@ApiOperation(value = "Endpoint para listar todas as pessoas", response = List.class)
 	public List<Pessoa> listar() {
 		return pessoaRepository.findAll();
 	}
 
 	@PostMapping
-	@ApiOperation(value = "Adiciona uma nova pessoa")
+	@ApiOperation(value = "Endpoint para adicionar uma nova pessoa")
 	public ResponseEntity<Pessoa> adicionar(@Valid @RequestBody Pessoa pessoa, HttpServletResponse response) {
 		Pessoa pessoaSalva = pessoaRepository.save(pessoa);
 		publisher.publishEvent(new RecursoCriadoEvent(this, response, pessoaSalva.getCodigo()));
@@ -56,7 +56,7 @@ public class PessoaResources {
 	}
 
 	@GetMapping("/{codigo}")
-	@ApiOperation(value = "Busca uma pessoa pelo código", response = Categoria.class)
+	@ApiOperation(value = "Endpoint para buscar uma pessoa pelo código", response = Categoria.class)
 	public ResponseEntity<Pessoa> buscarPeloCodigo(@PathVariable Long codigo) {
 		Pessoa pessoa = pessoaRepository.findOne(codigo);
 		return pessoa != null ? ResponseEntity.ok(pessoa) : ResponseEntity.notFound().build();
@@ -64,13 +64,13 @@ public class PessoaResources {
 	
 	@DeleteMapping("/{codigo}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@ApiOperation(value = "Remove uma pessoa pelo código", notes = "Exclui a pessoa do banco de dados pelo código informado.")
+	@ApiOperation(value = "Endpoint para remover uma pessoa pelo código", notes = "Exclui a pessoa do banco de dados pelo código informado.")
 	public void remover(@PathVariable Long codigo) {
 		pessoaRepository.delete(codigo);
 	}
 	
 	@PutMapping("/{codigo}")
-	@ApiOperation(value = "Atualiza uma pessoa pelo código", notes = "Atualiza os dados de uma pessoa no banco de dados.")
+	@ApiOperation(value = "Endpoint para atualizar uma pessoa pelo código", notes = "Atualiza os dados de uma pessoa no banco de dados.")
 	public ResponseEntity<Pessoa> atualizar(@PathVariable Long codigo, @Valid @RequestBody Pessoa pessoa) {
 		Pessoa pessoaSalva = pessoaService.atualizar(codigo, pessoa);
 		return ResponseEntity.ok(pessoaSalva);
@@ -78,7 +78,7 @@ public class PessoaResources {
 	
 	@PutMapping("/{codigo}/ativo")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@ApiOperation(value = "Atualiza a propriedade 'ativo' de uma pessoa")
+	@ApiOperation(value = "Endpoint para atualizar a propriedade 'ativo' de uma pessoa")
 	public void atualizarPropriedadeAtivo(@PathVariable Long codigo, @RequestBody Boolean ativo) {
 		pessoaService.atualizarPropriedadeAtivo(codigo, ativo);
 	}
