@@ -1,7 +1,6 @@
 package br.com.guifroes1984.api.pagamentos.token;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.servlet.Filter;
