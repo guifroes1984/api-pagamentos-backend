@@ -62,7 +62,7 @@ public class LancamentoResource {
 	}
 	
 	@GetMapping(params = "resumo")
-	@ApiOperation(value = "Endpoint para pesquisar todos os lançamentos", response = List.class)
+	@ApiOperation(value = "Endpoint para pesquisar todos os lançamentos (Resumo)", response = List.class)
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
 	public Page<ResumoLancamento> resumir(LancamentoFilter lancamentoFilter, Pageable pageable) {
 		return lancamentoRepository.resumir(lancamentoFilter, pageable);
