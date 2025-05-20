@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaCategoria;
+import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaDia;
 import br.com.guifroes1984.api.pagamentos.event.RecursoCriadoEvent;
 import br.com.guifroes1984.api.pagamentos.exceptionhandler.ExceptionHandler.Erro;
 import br.com.guifroes1984.api.pagamentos.model.Categoria;
@@ -56,6 +57,13 @@ public class LancamentoResource {
 	
 	@Autowired
 	private MessageSource messageSource;
+	
+	@GetMapping("/estatisticas/por-dia")
+	@ApiOperation(value = "Endpoint para obter estatísticas de lançamentos por dia", response = List.class)
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
+	public List<LancamentoEstatisticaDia> porDia() {
+		return this.lancamentoRepository.porDia(LocalDate.now());
+	}
 	
 	@GetMapping("/estatisticas/por-categoria")
 	@ApiOperation(value = "Endpoint para obter estatísticas de lançamentos por categoria", response = List.class)

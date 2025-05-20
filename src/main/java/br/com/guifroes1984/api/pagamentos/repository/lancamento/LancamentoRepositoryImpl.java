@@ -56,8 +56,7 @@ public class LancamentoRepositoryImpl implements LancamentoRepositoryQuery {
 		criteriaQuery.groupBy(root.get(Lancamento_.tipo), 
 				root.get(Lancamento_.dataVencimento));
 
-		TypedQuery<LancamentoEstatisticaDia> typedQuery = manager
-				.createQuery(criteriaQuery);
+		TypedQuery<LancamentoEstatisticaDia> typedQuery = manager.createQuery(criteriaQuery);
 
 		return typedQuery.getResultList();
 	}
