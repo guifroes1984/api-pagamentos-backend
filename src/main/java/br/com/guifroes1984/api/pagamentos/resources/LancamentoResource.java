@@ -1,5 +1,6 @@
 package br.com.guifroes1984.api.pagamentos.resources;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaCategoria;
 import br.com.guifroes1984.api.pagamentos.event.RecursoCriadoEvent;
 import br.com.guifroes1984.api.pagamentos.exceptionhandler.ExceptionHandler.Erro;
 import br.com.guifroes1984.api.pagamentos.model.Categoria;
@@ -54,6 +56,13 @@ public class LancamentoResource {
 	
 	@Autowired
 	private MessageSource messageSource;
+	
+	@GetMapping("/estatisticas/por-categoria")
+	@ApiOperation(value = "Endpoint para obter estatísticas de lançamentos por categoria", response = List.class)
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
+	public List<LancamentoEstatisticaCategoria> porCategoria() {
+		return this.lancamentoRepository.porCategoria(LocalDate.now());
+	}
 	
 	@GetMapping
 	@ApiOperation(value = "Endpoint para pesquisar todos os lançamentos", response = List.class)
