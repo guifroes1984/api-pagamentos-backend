@@ -8,11 +8,14 @@ import org.springframework.data.domain.Pageable;
 
 import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaCategoria;
 import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaDia;
+import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaPessoa;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
 import br.com.guifroes1984.api.pagamentos.repository.filter.LancamentoFilter;
 import br.com.guifroes1984.api.pagamentos.repository.projection.ResumoLancamento;
 
 public interface LancamentoRepositoryQuery {
+	
+	public List<LancamentoEstatisticaPessoa> porPessoa(LocalDate inicio, LocalDate fim);
 	
 	public List<LancamentoEstatisticaCategoria> porCategoria(LocalDate mesReferencia);
 	
