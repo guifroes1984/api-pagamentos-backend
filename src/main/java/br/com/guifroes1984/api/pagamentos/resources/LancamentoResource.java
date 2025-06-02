@@ -1,8 +1,6 @@
 package br.com.guifroes1984.api.pagamentos.resources;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -39,15 +37,18 @@ import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaCategoria;
 import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaDia;
 import br.com.guifroes1984.api.pagamentos.event.RecursoCriadoEvent;
 import br.com.guifroes1984.api.pagamentos.exceptionhandler.ExceptionHandler.Erro;
+import br.com.guifroes1984.api.pagamentos.model.Anexo;
 import br.com.guifroes1984.api.pagamentos.model.Categoria;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
 import br.com.guifroes1984.api.pagamentos.repository.LancamentoRepository;
 import br.com.guifroes1984.api.pagamentos.repository.filter.LancamentoFilter;
 import br.com.guifroes1984.api.pagamentos.repository.projection.ResumoLancamento;
+import br.com.guifroes1984.api.pagamentos.service.AnexoService;
 import br.com.guifroes1984.api.pagamentos.service.LancamentoService;
 import br.com.guifroes1984.api.pagamentos.service.exception.PessoaInexistenteOuInativaException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @RestController
 @RequestMapping("/lancamentos")
@@ -65,15 +66,16 @@ public class LancamentoResource {
 
 	@Autowired
 	private MessageSource messageSource;
-	
+
+	@Autowired
+	private AnexoService anexoService;
+
 	@PostMapping("/anexo")
 	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
-	public String uploadAnexo(@RequestParam MultipartFile anexo) throws IOException {
-		OutputStream out = new FileOutputStream(
-				"C:\\Users\\Master\\Desktop\\arquivos\\anexo--" + anexo.getOriginalFilename());
-		out.write(anexo.getBytes());
-		out.close();
-		return "ok";
+	@ApiOperation(value = "Faz upload de um arquivo anexo", notes = "Faz o upload de um arquivo (ex: comprovante) e retorna o objeto salvo com informações do anexo.")
+	public ResponseEntity<Anexo> upload(@ApiParam(value = "Arquivo a ser enviado (ex: comprovante)", required = true) @RequestParam MultipartFile anexo) throws IOException {
+		Anexo salvo = anexoService.salvar(anexo);
+		return ResponseEntity.ok(salvo);
 	}
 
 	@GetMapping("/relatorios/por-pessoa")
