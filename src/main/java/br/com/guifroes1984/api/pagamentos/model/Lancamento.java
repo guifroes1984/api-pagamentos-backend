@@ -13,8 +13,11 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -26,15 +29,17 @@ public class Lancamento {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long codigo;
-	
+
 	@NotNull
 	private String descricao;
 
 	@NotNull
 	@Column(name = "data_vencimento")
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate dataVencimento;
 
 	@Column(name = "data_pagamento")
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate dataPagamento;
 
 	@NotNull
@@ -56,9 +61,21 @@ public class Lancamento {
 	@ManyToOne
 	@JoinColumn(name = "codigo_pessoa")
 	private Pessoa pessoa;
-	
+
+	@OneToOne
+	@JoinColumn(name = "codigo_anexo")
+	private Anexo anexo;
+
+	public Anexo getAnexo() {
+		return anexo;
+	}
+
+	public void setAnexo(Anexo anexo) {
+		this.anexo = anexo;
+	}
+
 	@JsonIgnore
-	public  boolean isReceita() {
+	public boolean isReceita() {
 		return TipoLancamento.RECEITA.equals(this.tipo);
 	}
 

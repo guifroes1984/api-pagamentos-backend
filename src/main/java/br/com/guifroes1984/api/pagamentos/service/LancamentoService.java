@@ -1,5 +1,6 @@
 package br.com.guifroes1984.api.pagamentos.service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Date;
 import java.time.LocalDate;
@@ -14,9 +15,11 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaPessoa;
 import br.com.guifroes1984.api.pagamentos.mail.Mailer;
+import br.com.guifroes1984.api.pagamentos.model.Anexo;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
 import br.com.guifroes1984.api.pagamentos.model.Pessoa;
 import br.com.guifroes1984.api.pagamentos.model.Usuario;
@@ -31,93 +34,110 @@ import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
 @Service
 public class LancamentoService {
-	
+
 	private static final String DESTINATARIOS = "ROLE_PESQUISAR_LANCAMENTO";
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(LancamentoService.class);
-	
+
 	@Autowired
 	private PessoaRepository pessoaRepository;
-	
-	@Autowired 
+
+	@Autowired
 	private LancamentoRepository lancamentoRepository;
-	
+
 	@Autowired
 	private UsuarioRepository usuarioRepository;
-	
+
 	@Autowired
 	private Mailer mailer;
-	
-	@Scheduled(cron = "0 0 6 * * *") /*Metodo de agendamento para execução. No caso aqui está todos os dia a 6h da manhã.*/
-	//@Scheduled(fixedDelay = 1000 * 60 * 30) /*Metodo que nvia nesse caso aqui a cada 30 minutos um e-mail. Somente para testar*/
+
+	@Autowired
+	private AnexoService anexoService;
+
+	@Scheduled(cron = "0 0 6 * * *") /*
+										 * Metodo de agendamento para execução. No caso aqui está todos os dia a 6h da
+										 * manhã.
+										 */
+	// @Scheduled(fixedDelay = 1000 * 60 * 30) /*Metodo que nvia nesse caso aqui a
+	// cada 30 minutos um e-mail. Somente para testar*/
 	public void avisarSobreLancamentosVencidos() {
 		if (logger.isDebugEnabled()) {
-			logger.debug("Preparando envio de " 
-					+ "e-mails de aviso de lançamentos vencidos.");
+			logger.debug("Preparando envio de " + "e-mails de aviso de lançamentos vencidos.");
 		}
-		
+
 		List<Lancamento> vencidos = lancamentoRepository
 				.findByDataVencimentoLessThanEqualAndDataPagamentoIsNull(LocalDate.now());
-		
+
 		if (vencidos.isEmpty()) {
 			logger.info("Sem lançamentos vencidos para aviso.");
-			
+
 			return;
 		}
-		
+
 		logger.info("Existem {} lançamentos vencidos.", vencidos.size());
-		
-		List<Usuario> destinatarios = usuarioRepository
-				.findByPermissoesDescricao(DESTINATARIOS);
-		
+
+		List<Usuario> destinatarios = usuarioRepository.findByPermissoesDescricao(DESTINATARIOS);
+
 		if (destinatarios.isEmpty()) {
-			logger.warn("Existem lançamentos vencidos, mas o " 
-					+ "sistema não encontrou destinatários.");
-			
+			logger.warn("Existem lançamentos vencidos, mas o " + "sistema não encontrou destinatários.");
+
 			return;
 		}
-		
+
 		mailer.avisarSobreLancamentosVencidos(vencidos, destinatarios);
-		
+
 		logger.info("Envio de e-mail de aviso concluído.");
 	}
-	
+
 	public byte[] relatorioPorPessoa(LocalDate inicio, LocalDate fim) throws Exception {
 		List<LancamentoEstatisticaPessoa> dados = lancamentoRepository.porPessoa(inicio, fim);
-		
+
 		Map<String, Object> parametros = new HashMap<>();
 		parametros.put("DT_INICIO", Date.valueOf(inicio));
 		parametros.put("DT_FIM", Date.valueOf(fim));
 		parametros.put("REPORT_LOCALE", new Locale("pt", "BR"));
-		
-		InputStream inputStream = this.getClass().getResourceAsStream(
-				"/relatorios/lancamentos-por-pessoa.jasper");
-		
-		JasperPrint jasperPrint = JasperFillManager.fillReport(inputStream, parametros, 
+
+		InputStream inputStream = this.getClass().getResourceAsStream("/relatorios/lancamentos-por-pessoa.jasper");
+
+		JasperPrint jasperPrint = JasperFillManager.fillReport(inputStream, parametros,
 				new JRBeanCollectionDataSource(dados));
-		
+
 		return JasperExportManager.exportReportToPdf(jasperPrint);
 	}
 
 	public Lancamento salvar(Lancamento lancamento) {
-		Pessoa pessoa = pessoaRepository.findOne(lancamento.getPessoa().getCodigo());
+		validarPessoaAtiva(lancamento.getPessoa().getCodigo());
+		return lancamentoRepository.save(lancamento);
+	}
+
+	public Lancamento salvarComAnexo(Lancamento lancamento, MultipartFile file) throws IOException {
+		validarPessoaAtiva(lancamento.getPessoa().getCodigo());
+
+		if (file != null && !file.isEmpty()) {
+			Anexo anexo = anexoService.salvar(file);
+			lancamento.setAnexo(anexo);
+		}
+
+		return lancamentoRepository.save(lancamento);
+	}
+
+	private void validarPessoaAtiva(Long pessoaCodigo) {
+		Pessoa pessoa = pessoaRepository.findOne(pessoaCodigo);
 		if (pessoa == null || pessoa.isInativo()) {
 			throw new PessoaInexistenteOuInativaException();
 		}
-		
-		return lancamentoRepository.save(lancamento);
 	}
-	
+
 	public Lancamento atualizar(Long codigo, Lancamento lancamento) {
 		Lancamento lancamentoSalvo = buscarLancamentoExistente(codigo);
 		if (!lancamento.getPessoa().equals(lancamentoSalvo.getPessoa())) {
 			validarPessoa(lancamento);
 		}
-		
+
 		BeanUtils.copyProperties(lancamento, lancamentoSalvo, "codigo");
-		
+
 		return lancamentoRepository.save(lancamento);
-		
+
 	}
 
 	private void validarPessoa(Lancamento lancamento) {
@@ -129,7 +149,7 @@ public class LancamentoService {
 			throw new PessoaInexistenteOuInativaException();
 		}
 	}
-	
+
 	private Lancamento buscarLancamentoExistente(Long codigo) {
 		Lancamento lancamentoSalvo = lancamentoRepository.findOne(codigo);
 		if (lancamentoSalvo == null) {

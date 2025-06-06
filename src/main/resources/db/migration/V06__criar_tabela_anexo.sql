@@ -1,6 +1,0 @@
-CREATE TABLE anexo (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    nome VARCHAR(255),
-    tipo VARCHAR(100),
-    dados LONGBLOB
-);

@@ -10,6 +10,8 @@ import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "anexo")
 public class Anexo {
@@ -26,6 +28,7 @@ public class Anexo {
 
 	@Lob
 	@NotNull
+	@JsonIgnore
 	private byte[] dados;
 
 	public Long getCodigo() {

@@ -29,26 +29,26 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaCategoria;
 import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaDia;
 import br.com.guifroes1984.api.pagamentos.event.RecursoCriadoEvent;
 import br.com.guifroes1984.api.pagamentos.exceptionhandler.ExceptionHandler.Erro;
-import br.com.guifroes1984.api.pagamentos.model.Anexo;
 import br.com.guifroes1984.api.pagamentos.model.Categoria;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
 import br.com.guifroes1984.api.pagamentos.repository.LancamentoRepository;
 import br.com.guifroes1984.api.pagamentos.repository.filter.LancamentoFilter;
 import br.com.guifroes1984.api.pagamentos.repository.projection.ResumoLancamento;
-import br.com.guifroes1984.api.pagamentos.service.AnexoService;
 import br.com.guifroes1984.api.pagamentos.service.LancamentoService;
 import br.com.guifroes1984.api.pagamentos.service.exception.PessoaInexistenteOuInativaException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 
 @RestController
 @RequestMapping("/lancamentos")
@@ -66,17 +66,21 @@ public class LancamentoResource {
 
 	@Autowired
 	private MessageSource messageSource;
-
+	
 	@Autowired
-	private AnexoService anexoService;
+    private ObjectMapper objectMapper;
+	
+	@PostMapping(value = "/com-anexo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ApiOperation(value = "Cadastrar lançamento com anexo", notes = "Faz o upload de um arquivo (ex: comprovante) e retorna o objeto salvo com informações do anexo.")
+    @PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
+    public ResponseEntity<Lancamento> criarComAnexo(@RequestPart("lancamento") String lancamentoJson, @RequestPart("file") MultipartFile file, HttpServletResponse response) throws IOException {
 
-	@PostMapping("/anexo")
-	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
-	@ApiOperation(value = "Faz upload de um arquivo anexo", notes = "Faz o upload de um arquivo (ex: comprovante) e retorna o objeto salvo com informações do anexo.")
-	public ResponseEntity<Anexo> upload(@ApiParam(value = "Arquivo a ser enviado (ex: comprovante)", required = true) @RequestParam MultipartFile anexo) throws IOException {
-		Anexo salvo = anexoService.salvar(anexo);
-		return ResponseEntity.ok(salvo);
-	}
+        Lancamento lancamento = objectMapper.readValue(lancamentoJson, Lancamento.class);
+
+        Lancamento lancamentoSalvo = lancamentoService.salvarComAnexo(lancamento, file);
+        publisher.publishEvent(new RecursoCriadoEvent(this, response, lancamentoSalvo.getCodigo()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(lancamentoSalvo);
+    }
 
 	@GetMapping("/relatorios/por-pessoa")
 	@ApiOperation(value = "Gera um relatório em PDF dos lançamentos por pessoa", notes = "Gera um relatório consolidado de lançamentos financeiros agrupados por pessoa dentro de um intervalo de datas. O retorno é um arquivo PDF.", produces = MediaType.APPLICATION_PDF_VALUE)
