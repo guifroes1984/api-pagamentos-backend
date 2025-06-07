@@ -148,16 +148,25 @@ public class LancamentoResource {
 		lancamentoRepository.delete(codigo);
 	}
 
-	@PutMapping("{codigo}")
+	@PutMapping(value = "{codigo}/anexo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO')")
-	@ApiOperation(value = "Endpoint para atualizar um lançamento", notes = "Atualiza um lançamento existente no banco de dados pelo código informado.")
-	public ResponseEntity<Lancamento> atualizar(@PathVariable Long codigo, @Valid @RequestBody Lancamento lancamento) {
-		try {
-			Lancamento lancamentoSalvo = lancamentoService.atualizar(codigo, lancamento);
-			return ResponseEntity.ok(lancamentoSalvo);
-		} catch (IllegalArgumentException e) {
-			return ResponseEntity.notFound().build();
-		}
+	@ApiOperation(value = "Atualiza apenas o anexo de um lançamento")
+	public ResponseEntity<?> atualizarAnexo(@PathVariable Long codigo, @RequestPart("file") MultipartFile file) {
+
+	    try {
+	        Lancamento lancamentoAtualizado = lancamentoService.atualizarAnexo(codigo, file);
+	        return ResponseEntity.ok(lancamentoAtualizado);
+	    } catch (IOException e) {
+	        return ResponseEntity.badRequest().body("Erro ao processar o anexo: " + e.getMessage());
+	    }
+	}
+	
+	@DeleteMapping("/{codigo}/anexo")
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO')")
+	@ApiOperation(value = "Remove o anexo de um lançamento")
+	public ResponseEntity<Void> deletarAnexo(@PathVariable Long codigo) {
+	    lancamentoService.removerAnexo(codigo);
+	    return ResponseEntity.noContent().build();
 	}
 
 	@ExceptionHandler({ PessoaInexistenteOuInativaException.class })

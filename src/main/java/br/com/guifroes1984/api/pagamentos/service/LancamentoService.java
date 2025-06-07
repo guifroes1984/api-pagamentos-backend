@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -23,6 +22,7 @@ import br.com.guifroes1984.api.pagamentos.model.Anexo;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
 import br.com.guifroes1984.api.pagamentos.model.Pessoa;
 import br.com.guifroes1984.api.pagamentos.model.Usuario;
+import br.com.guifroes1984.api.pagamentos.repository.AnexoRepository;
 import br.com.guifroes1984.api.pagamentos.repository.LancamentoRepository;
 import br.com.guifroes1984.api.pagamentos.repository.PessoaRepository;
 import br.com.guifroes1984.api.pagamentos.repository.UsuarioRepository;
@@ -53,6 +53,9 @@ public class LancamentoService {
 
 	@Autowired
 	private AnexoService anexoService;
+	
+	@Autowired
+	private AnexoRepository anexoRepository;
 
 	@Scheduled(cron = "0 0 6 * * *") /*
 										 * Metodo de agendamento para execução. No caso aqui está todos os dia a 6h da
@@ -128,26 +131,35 @@ public class LancamentoService {
 		}
 	}
 
-	public Lancamento atualizar(Long codigo, Lancamento lancamento) {
-		Lancamento lancamentoSalvo = buscarLancamentoExistente(codigo);
-		if (!lancamento.getPessoa().equals(lancamentoSalvo.getPessoa())) {
-			validarPessoa(lancamento);
-		}
+	public Lancamento atualizarAnexo(Long codigo, MultipartFile file) throws IOException {
+	    Lancamento lancamentoSalvo = buscarLancamentoExistente(codigo);
 
-		BeanUtils.copyProperties(lancamento, lancamentoSalvo, "codigo");
+	    if (file != null && !file.isEmpty()) {
+	        Anexo novoAnexo = anexoService.salvar(file);
+	        Anexo anexoAntigo = lancamentoSalvo.getAnexo();
+	        lancamentoSalvo.setAnexo(novoAnexo);
+	        Lancamento salvo = lancamentoRepository.save(lancamentoSalvo);
 
-		return lancamentoRepository.save(lancamento);
+	        if (anexoAntigo != null && anexoAntigo.getCodigo() != null
+	            && !anexoAntigo.getCodigo().equals(novoAnexo.getCodigo())) {
+	            anexoRepository.delete(anexoAntigo);
+	        }
 
+	        return salvo;
+	    }
+
+	    return lancamentoSalvo;
 	}
-
-	private void validarPessoa(Lancamento lancamento) {
-		Pessoa pessoa = null;
-		if (lancamento.getPessoa().getCodigo() != null) {
-			pessoa = pessoaRepository.findOne(lancamento.getPessoa().getCodigo());
-		}
-		if (pessoa == null || pessoa.isInativo()) {
-			throw new PessoaInexistenteOuInativaException();
-		}
+	
+	public void removerAnexo(Long codigo) {
+	    Lancamento lancamento = buscarLancamentoExistente(codigo);
+	    Anexo anexo = lancamento.getAnexo();
+	    
+	    if (anexo != null) {
+	        lancamento.setAnexo(null);
+	        lancamentoRepository.save(lancamento);
+	        anexoRepository.delete(anexo);
+	    }
 	}
 
 	private Lancamento buscarLancamentoExistente(Long codigo) {
