@@ -40,6 +40,7 @@ import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaCategoria;
 import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaDia;
 import br.com.guifroes1984.api.pagamentos.event.RecursoCriadoEvent;
 import br.com.guifroes1984.api.pagamentos.exceptionhandler.ExceptionHandler.Erro;
+import br.com.guifroes1984.api.pagamentos.model.Anexo;
 import br.com.guifroes1984.api.pagamentos.model.Categoria;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
 import br.com.guifroes1984.api.pagamentos.repository.LancamentoRepository;
@@ -81,6 +82,25 @@ public class LancamentoResource {
         publisher.publishEvent(new RecursoCriadoEvent(this, response, lancamentoSalvo.getCodigo()));
         return ResponseEntity.status(HttpStatus.CREATED).body(lancamentoSalvo);
     }
+	
+	@GetMapping("/{codigo}/anexo")
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO')")
+	@ApiOperation(value = "Download do anexo de um lançamento")
+	public ResponseEntity<byte[]> downloadAnexo(@PathVariable Long codigo) {
+	    try {
+	        Anexo anexo = lancamentoService.buscarAnexoDoLancamento(codigo);
+
+	        return ResponseEntity.ok()
+	                .contentType(MediaType.parseMediaType(anexo.getTipo()))
+	                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + anexo.getNome() + "\"")
+	                .body(anexo.getDados());
+
+	    } catch (IllegalArgumentException e) {
+	        return ResponseEntity.notFound().build();
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+	    }
+	}
 
 	@GetMapping("/relatorios/por-pessoa")
 	@ApiOperation(value = "Gera um relatório em PDF dos lançamentos por pessoa", notes = "Gera um relatório consolidado de lançamentos financeiros agrupados por pessoa dentro de um intervalo de datas. O retorno é um arquivo PDF.", produces = MediaType.APPLICATION_PDF_VALUE)

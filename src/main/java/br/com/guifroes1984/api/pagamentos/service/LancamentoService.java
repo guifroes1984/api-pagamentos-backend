@@ -161,6 +161,20 @@ public class LancamentoService {
 	        anexoRepository.delete(anexo);
 	    }
 	}
+	
+	public Anexo buscarAnexoDoLancamento(Long codigoLancamento) {
+		Lancamento lancamento = lancamentoRepository.findOne(codigoLancamento);
+		if (lancamento == null) {
+		    throw new IllegalArgumentException("Lançamento não encontrado");
+		}
+
+	    Anexo anexo = lancamento.getAnexo(); // Supondo que existe getAnexo()
+	    if (anexo == null) {
+	        throw new IllegalArgumentException("Lançamento não possui anexo");
+	    }
+
+	    return anexo;
+	}
 
 	private Lancamento buscarLancamentoExistente(Long codigo) {
 		Lancamento lancamentoSalvo = lancamentoRepository.findOne(codigo);
