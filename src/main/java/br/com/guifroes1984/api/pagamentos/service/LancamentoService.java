@@ -53,7 +53,7 @@ public class LancamentoService {
 
 	@Autowired
 	private AnexoService anexoService;
-	
+
 	@Autowired
 	private AnexoRepository anexoRepository;
 
@@ -113,6 +113,18 @@ public class LancamentoService {
 		return lancamentoRepository.save(lancamento);
 	}
 
+	public Lancamento atualizar(Lancamento lancamento) {
+		Lancamento lancamentoSalvo = buscarLancamentoExistente(lancamento.getCodigo());
+
+		// Preserva o anexo e outros campos sensíveis
+		org.springframework.beans.BeanUtils.copyProperties(lancamento, lancamentoSalvo, "codigo", "anexo", "anexoNome",
+				"anexoTipo", "dadosAnexo");
+
+		validarPessoaAtiva(lancamentoSalvo.getPessoa().getCodigo());
+
+		return lancamentoRepository.save(lancamentoSalvo);
+	}
+
 	public Lancamento salvarComAnexo(Lancamento lancamento, MultipartFile file) throws IOException {
 		validarPessoaAtiva(lancamento.getPessoa().getCodigo());
 
@@ -132,48 +144,47 @@ public class LancamentoService {
 	}
 
 	public Lancamento atualizarAnexo(Long codigo, MultipartFile file) throws IOException {
-	    Lancamento lancamentoSalvo = buscarLancamentoExistente(codigo);
+		Lancamento lancamentoSalvo = buscarLancamentoExistente(codigo);
 
-	    if (file != null && !file.isEmpty()) {
-	        Anexo novoAnexo = anexoService.salvar(file);
-	        Anexo anexoAntigo = lancamentoSalvo.getAnexo();
-	        lancamentoSalvo.setAnexo(novoAnexo);
-	        Lancamento salvo = lancamentoRepository.save(lancamentoSalvo);
+		Anexo anexo = lancamentoSalvo.getAnexo();
 
-	        if (anexoAntigo != null && anexoAntigo.getCodigo() != null
-	            && !anexoAntigo.getCodigo().equals(novoAnexo.getCodigo())) {
-	            anexoRepository.delete(anexoAntigo);
-	        }
+		if (anexo == null) {
+			anexo = anexoService.salvar(file);
+			lancamentoSalvo.setAnexo(anexo);
+		} else {
+			anexo.setNome(file.getOriginalFilename());
+			anexo.setTipo(file.getContentType());
+			anexo.setDados(file.getBytes());
 
-	        return salvo;
-	    }
+			anexoRepository.save(anexo);
+		}
 
-	    return lancamentoSalvo;
+		return lancamentoRepository.save(lancamentoSalvo);
 	}
-	
+
 	public void removerAnexo(Long codigo) {
-	    Lancamento lancamento = buscarLancamentoExistente(codigo);
-	    Anexo anexo = lancamento.getAnexo();
-	    
-	    if (anexo != null) {
-	        lancamento.setAnexo(null);
-	        lancamentoRepository.save(lancamento);
-	        anexoRepository.delete(anexo);
-	    }
+		Lancamento lancamento = buscarLancamentoExistente(codigo);
+		Anexo anexo = lancamento.getAnexo();
+
+		if (anexo != null) {
+			lancamento.setAnexo(null);
+			lancamentoRepository.save(lancamento);
+			anexoRepository.delete(anexo);
+		}
 	}
-	
+
 	public Anexo buscarAnexoDoLancamento(Long codigoLancamento) {
 		Lancamento lancamento = lancamentoRepository.findOne(codigoLancamento);
 		if (lancamento == null) {
-		    throw new IllegalArgumentException("Lançamento não encontrado");
+			throw new IllegalArgumentException("Lançamento não encontrado");
 		}
 
-	    Anexo anexo = lancamento.getAnexo(); // Supondo que existe getAnexo()
-	    if (anexo == null) {
-	        throw new IllegalArgumentException("Lançamento não possui anexo");
-	    }
+		Anexo anexo = lancamento.getAnexo(); // Supondo que existe getAnexo()
+		if (anexo == null) {
+			throw new IllegalArgumentException("Lançamento não possui anexo");
+		}
 
-	    return anexo;
+		return anexo;
 	}
 
 	private Lancamento buscarLancamentoExistente(Long codigo) {

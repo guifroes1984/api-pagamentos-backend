@@ -72,7 +72,7 @@ public class LancamentoResource {
     private ObjectMapper objectMapper;
 	
 	@PostMapping(value = "/com-anexo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ApiOperation(value = "Cadastrar lançamento com anexo", notes = "Faz o upload de um arquivo (ex: comprovante) e retorna o objeto salvo com informações do anexo.")
+    @ApiOperation(value = "Endpoint para cadastrar lançamento com anexo", notes = "Faz o upload de um arquivo (ex: comprovante) e retorna o objeto salvo com informações do anexo.")
     @PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
     public ResponseEntity<Lancamento> criarComAnexo(@RequestPart("lancamento") String lancamentoJson, @RequestPart("file") MultipartFile file, HttpServletResponse response) throws IOException {
 
@@ -85,7 +85,7 @@ public class LancamentoResource {
 	
 	@GetMapping("/{codigo}/anexo")
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO')")
-	@ApiOperation(value = "Download do anexo de um lançamento")
+	@ApiOperation(value = "Endpoint que faz download do anexo de um lançamento")
 	public ResponseEntity<byte[]> downloadAnexo(@PathVariable Long codigo) {
 	    try {
 	        Anexo anexo = lancamentoService.buscarAnexoDoLancamento(codigo);
@@ -103,7 +103,7 @@ public class LancamentoResource {
 	}
 
 	@GetMapping("/relatorios/por-pessoa")
-	@ApiOperation(value = "Gera um relatório em PDF dos lançamentos por pessoa", notes = "Gera um relatório consolidado de lançamentos financeiros agrupados por pessoa dentro de um intervalo de datas. O retorno é um arquivo PDF.", produces = MediaType.APPLICATION_PDF_VALUE)
+	@ApiOperation(value = "Endpoint que gera relatório em PDF dos lançamentos por pessoa", notes = "Gera um relatório consolidado de lançamentos financeiros agrupados por pessoa dentro de um intervalo de datas. O retorno é um arquivo PDF.", produces = MediaType.APPLICATION_PDF_VALUE)
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
 	public ResponseEntity<byte[]> relatorioPorPessoa(
 			@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate inicio,
@@ -170,7 +170,7 @@ public class LancamentoResource {
 
 	@PutMapping(value = "{codigo}/anexo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO')")
-	@ApiOperation(value = "Atualiza apenas o anexo de um lançamento")
+	@ApiOperation(value = "Endpoint para atualiza apenas o anexo de um lançamento")
 	public ResponseEntity<?> atualizarAnexo(@PathVariable Long codigo, @RequestPart("file") MultipartFile file) {
 
 	    try {
@@ -181,9 +181,18 @@ public class LancamentoResource {
 	    }
 	}
 	
+	@PutMapping("/{codigo}")
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
+	@ApiOperation(value = "Atualiza os dados de um lançamento")
+	public ResponseEntity<Lancamento> atualizar(@PathVariable Long codigo, @Valid @RequestBody Lancamento lancamento) {
+	    lancamento.setCodigo(codigo);
+	    Lancamento lancamentoAtualizado = lancamentoService.atualizar(lancamento);
+	    return ResponseEntity.ok(lancamentoAtualizado);
+	}
+	
 	@DeleteMapping("/{codigo}/anexo")
 	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO')")
-	@ApiOperation(value = "Remove o anexo de um lançamento")
+	@ApiOperation(value = "Endpoint que remove o anexo de um lançamento")
 	public ResponseEntity<Void> deletarAnexo(@PathVariable Long codigo) {
 	    lancamentoService.removerAnexo(codigo);
 	    return ResponseEntity.noContent().build();

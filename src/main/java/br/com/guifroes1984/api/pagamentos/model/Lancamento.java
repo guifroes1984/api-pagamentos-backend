@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -62,7 +63,7 @@ public class Lancamento {
 	@JoinColumn(name = "codigo_pessoa")
 	private Pessoa pessoa;
 
-	@OneToOne
+	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "codigo_anexo")
 	private Anexo anexo;
 

@@ -20,14 +20,11 @@ public class Anexo {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long codigo;
 
-	@NotNull
 	private String nome;
 
-	@NotNull
 	private String tipo;
 
 	@Lob
-	@NotNull
 	@JsonIgnore
 	private byte[] dados;
 
