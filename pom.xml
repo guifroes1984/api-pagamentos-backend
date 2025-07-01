@@ -26,7 +26,7 @@
 		<jasperreports-functions.version>6.17.0</jasperreports-functions.version>
 		<jasperreports-fonts.version>6.17.0</jasperreports-fonts.version>
 		
-		<jackson.version>2.8.11</jackson.version>
+		<jackson.version>2.9.5</jackson.version>
 	</properties>
 
 	<dependencies>
