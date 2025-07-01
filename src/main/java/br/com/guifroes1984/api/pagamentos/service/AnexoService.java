@@ -26,9 +26,12 @@ public class AnexoService {
 		anexo.setDados(file.getBytes());
 		return anexoRepository.save(anexo);
 	}
-	
+
 	public void remover(Long id) {
-        anexoRepository.delete(id);
-    }
+		if (!anexoRepository.existsById(id)) {
+			throw new IllegalArgumentException("Anexo não encontrado");
+		}
+		anexoRepository.deleteById(id);
+	}
 
 }

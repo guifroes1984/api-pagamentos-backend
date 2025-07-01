@@ -1,6 +1,7 @@
 package br.com.guifroes1984.api.pagamentos.resources;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -65,8 +66,8 @@ public class PessoaResources {
 	@ApiOperation(value = "Endpoint para buscar uma pessoa pelo código", response = Categoria.class)
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_PESSOA') and #oauth2.hasScope('read')")
 	public ResponseEntity<Pessoa> buscarPeloCodigo(@PathVariable Long codigo) {
-		Pessoa pessoa = pessoaRepository.findOne(codigo);
-		return pessoa != null ? ResponseEntity.ok(pessoa) : ResponseEntity.notFound().build();
+		Optional<Pessoa> pessoa = pessoaRepository.findById(codigo);
+		return pessoa.isPresent() ? ResponseEntity.ok(pessoa.get()) : ResponseEntity.notFound().build();
 	}
 	
 	@DeleteMapping("/{codigo}")
@@ -74,7 +75,7 @@ public class PessoaResources {
 	@ApiOperation(value = "Endpoint para remover uma pessoa pelo código", notes = "Exclui a pessoa do banco de dados pelo código informado.")
 	@PreAuthorize("hasAuthority('ROLE_REMOVER_PESSOA') and #oauth2.hasScope('write')")
 	public void remover(@PathVariable Long codigo) {
-		pessoaRepository.delete(codigo);
+		pessoaRepository.deleteById(codigo);
 	}
 	
 	@PutMapping("/{codigo}")

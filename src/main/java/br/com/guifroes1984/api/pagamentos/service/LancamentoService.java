@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +138,7 @@ public class LancamentoService {
 	}
 
 	private void validarPessoaAtiva(Long pessoaCodigo) {
-		Pessoa pessoa = pessoaRepository.findOne(pessoaCodigo);
+		Pessoa pessoa = pessoaRepository.getOne(pessoaCodigo);
 		if (pessoa == null || pessoa.isInativo()) {
 			throw new PessoaInexistenteOuInativaException();
 		}
@@ -174,10 +175,8 @@ public class LancamentoService {
 	}
 
 	public Anexo buscarAnexoDoLancamento(Long codigoLancamento) {
-		Lancamento lancamento = lancamentoRepository.findOne(codigoLancamento);
-		if (lancamento == null) {
-			throw new IllegalArgumentException("Lançamento não encontrado");
-		}
+		Lancamento lancamento = lancamentoRepository.findById(codigoLancamento)
+				.orElseThrow(() -> new IllegalArgumentException("Lançamento não encontrado"));
 
 		Anexo anexo = lancamento.getAnexo(); // Supondo que existe getAnexo()
 		if (anexo == null) {
@@ -188,11 +187,11 @@ public class LancamentoService {
 	}
 
 	private Lancamento buscarLancamentoExistente(Long codigo) {
-		Lancamento lancamentoSalvo = lancamentoRepository.findOne(codigo);
-		if (lancamentoSalvo == null) {
+		Optional<Lancamento> lancamentoSalvo = lancamentoRepository.findById(codigo);
+		if (!lancamentoSalvo.isPresent()) {
 			throw new IllegalArgumentException();
 		}
-		return lancamentoSalvo;
+		return lancamentoSalvo.get();
 	}
 
 }
