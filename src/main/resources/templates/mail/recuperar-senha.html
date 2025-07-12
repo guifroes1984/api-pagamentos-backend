@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Recuperação de Senha</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 20px;">
+
+  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 24px; border-radius: 8px; border: 1px solid #dee2e6;">
+    <h2 style="color: #343a40;">Olá, <span th:text="${nome}">Usuário</span></h2>
+    
+    <p>Recebemos uma solicitação para redefinir sua senha.</p>
+
+    <p>Se você fez essa solicitação, clique no botão abaixo para criar uma nova senha:</p>
+
+    <div style="text-align: center; margin: 24px 0;">
+      <a th:href="${link}"
+         style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">
+         Redefinir Senha
+      </a>
+    </div>
+
+    <p>Se você não solicitou a alteração, pode ignorar este e-mail.</p>
+
+    <p style="color: #6c757d; font-size: 14px;">Este link expirará em 1 hora.</p>
+
+    <hr style="margin-top: 32px;">
+    <p style="font-size: 12px; color: #adb5bd;">E-mail enviado automaticamente. Não responda.</p>
+  </div>
+
+</body>
+</html>
