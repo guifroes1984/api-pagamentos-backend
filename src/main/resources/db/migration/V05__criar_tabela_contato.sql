@@ -7,5 +7,3 @@ CREATE TABLE contato (
   FOREIGN KEY (codigo_pessoa) REFERENCES pessoa(codigo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-INSERT INTO contato (codigo, codigo_pessoa, nome, email, telefone) values (1, 1, 
-	'Davi', 'davi@gmail.com', '00 0000-0000');

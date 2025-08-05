@@ -19,6 +19,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import br.com.guifroes1984.api.pagamentos.service.exception.CredenciaisInvalidasException;
@@ -80,20 +81,28 @@ public class ExceptionHandler extends ResponseEntityExceptionHandler {
 	@org.springframework.web.bind.annotation.ExceptionHandler(Exception.class)
 	public ResponseEntity<Object> handleAllExceptions(Exception ex, WebRequest request) {
 		if (ex instanceof org.springframework.security.oauth2.common.exceptions.InvalidGrantException) {
-			
-	        CredenciaisInvalidasException credEx = new CredenciaisInvalidasException("Credenciais inválidas");
-	        String mensagemUsuario = messageSource.getMessage("credenciais.invalidas", null, LocaleContextHolder.getLocale());
-	        String mensagemDesenvolvedor = credEx.toString();
-	        List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
-	        return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
-	    }
 
-	    String mensagemUsuario = messageSource.getMessage("erro.desconhecido", null, LocaleContextHolder.getLocale());
-	    String mensagemDesenvolvedor = ex.toString();
-	    List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
-	    return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+			CredenciaisInvalidasException credEx = new CredenciaisInvalidasException("Credenciais inválidas");
+			String mensagemUsuario = messageSource.getMessage("credenciais.invalidas", null,
+					LocaleContextHolder.getLocale());
+			String mensagemDesenvolvedor = credEx.toString();
+			List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
+			return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+		}
+
+		String mensagemUsuario = messageSource.getMessage("erro.desconhecido", null, LocaleContextHolder.getLocale());
+		String mensagemDesenvolvedor = ex.toString();
+		List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
+		return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
 	}
 
+	@org.springframework.web.bind.annotation.ExceptionHandler(MaxUploadSizeExceededException.class)
+	public ResponseEntity<Object> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex, WebRequest request) {
+	    String mensagemUsuario = messageSource.getMessage("arquivo.muito-grande", null, LocaleContextHolder.getLocale());
+	    String mensagemDesenvolvedor = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
+	    List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
+	    return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+	}
 
 	private List<Erro> criarListaDeErros(BindingResult bindingResult) {
 		List<Erro> erros = new ArrayList<>();

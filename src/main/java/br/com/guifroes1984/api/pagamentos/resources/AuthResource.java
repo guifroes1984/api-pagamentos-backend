@@ -19,44 +19,49 @@ import br.com.guifroes1984.api.pagamentos.model.PasswordResetToken;
 import br.com.guifroes1984.api.pagamentos.model.Usuario;
 import br.com.guifroes1984.api.pagamentos.repository.PasswordResetTokenRepository;
 import br.com.guifroes1984.api.pagamentos.repository.UsuarioRepository;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/auth")
+@Api(value = "Autenticação", description = "Endpoints para recuperação e redefinição de senha")
 public class AuthResource {
-	
+
 	@Autowired
 	private Mailer mailer;
-	
+
 	@Autowired
 	private PasswordEncoder passwordEncoder;
-	
+
 	@Autowired
 	private PasswordResetTokenRepository tokenRepository;
-	
+
 	@Autowired
 	private UsuarioRepository usuarioRepository;
-	
+
 	@PostMapping("/esqueci-senha")
+	@ApiOperation(value = "Solicitar recuperação de senha", notes = "Envia um e-mail com link para redefinição de senha para o usuário", response = Void.class)
 	public ResponseEntity<Void> esqueciSenha(@RequestBody EsqueciSenhaDTO esqueciSenhaDTO) {
 		mailer.solicitarResetDeSenha(esqueciSenhaDTO.getEmail());
 		return ResponseEntity.noContent().build();
 	}
-	
+
+	@ApiOperation(value = "Redefinir senha com token", notes = "Permite redefinir a senha de um usuário utilizando um token enviado por e-mail", response = Void.class)
 	@PostMapping("/resetar-senha")
 	public ResponseEntity<Void> resetarSenha(@RequestBody ResetarSenhaDTO resetarSenhaDTO) {
 		PasswordResetToken token = tokenRepository.findByToken(resetarSenhaDTO.getToken())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token inválido."));
-		
+
 		if (token.getExpiracao().isBefore(LocalDateTime.now())) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token expirado.");
 		}
-		
+
 		Usuario usuario = token.getUsuario();
 		usuario.setSenha(passwordEncoder.encode(resetarSenhaDTO.getNovaSenha()));
-		
+
 		usuarioRepository.save(usuario);
 		tokenRepository.delete(token);
-		
+
 		return ResponseEntity.noContent().build();
 	}
 

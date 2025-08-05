@@ -114,7 +114,7 @@ public class Mailer {
 
 		Map<String, Object> variaveis = new HashMap<>();
 		variaveis.put("nome", usuario.getNome());
-		variaveis.put("link", resetPasswordUrl + "?token=" + token);
+		variaveis.put("link", resetPasswordUrl + "/resetar-senha/" + token);
 
 		this.enviarEmail("guilhermefroestestedeemail@gmail.com", Arrays.asList(usuario.getEmail()),
 				"Recuperação de senha", "mail/recuperar-senha", variaveis);
