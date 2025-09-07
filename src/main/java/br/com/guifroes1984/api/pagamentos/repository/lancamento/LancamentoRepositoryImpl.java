@@ -61,59 +61,68 @@ public class LancamentoRepositoryImpl implements LancamentoRepositoryQuery {
 	}
 	
 	@Override
-	public List<LancamentoEstatisticaDia> porDia(LocalDate mesReferencia) {
-		CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
+	public List<LancamentoEstatisticaDia> porDia(LocalDate dataInicio, LocalDate dataFim) {
+	    CriteriaBuilder cb = manager.getCriteriaBuilder();
 
-		CriteriaQuery<LancamentoEstatisticaDia> criteriaQuery = criteriaBuilder
-				.createQuery(LancamentoEstatisticaDia.class);
+	    CriteriaQuery<LancamentoEstatisticaDia> cq = cb.createQuery(LancamentoEstatisticaDia.class);
+	    Root<Lancamento> root = cq.from(Lancamento.class);
 
-		Root<Lancamento> root = criteriaQuery.from(Lancamento.class);
+	    cq.select(cb.construct(
+	            LancamentoEstatisticaDia.class,
+	            root.get(Lancamento_.tipo),
+	            root.get(Lancamento_.dataVencimento),
+	            cb.sum(root.get(Lancamento_.valor))
+	    ));
 
-		criteriaQuery.select(criteriaBuilder.construct(LancamentoEstatisticaDia.class,
-				root.get(Lancamento_.tipo), 
-				root.get(Lancamento_.dataVencimento),
-				criteriaBuilder.sum(root.get(Lancamento_.valor))));
+	    Predicate restricoes = cb.conjunction();
 
-		LocalDate primeiroDia = mesReferencia.withDayOfMonth(1);
-		LocalDate ultimoDia = mesReferencia.withDayOfMonth(mesReferencia.lengthOfMonth());
+	    if (dataInicio != null) {
+	        restricoes = cb.and(restricoes,
+	                cb.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataInicio));
+	    }
 
-		criteriaQuery.where(criteriaBuilder.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), 
-						primeiroDia),
-				criteriaBuilder.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), 
-						ultimoDia));
+	    if (dataFim != null) {
+	        restricoes = cb.and(restricoes,
+	                cb.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataFim));
+	    }
 
-		criteriaQuery.groupBy(root.get(Lancamento_.tipo), 
-				root.get(Lancamento_.dataVencimento));
+	    cq.where(restricoes);
+	    cq.groupBy(root.get(Lancamento_.tipo), root.get(Lancamento_.dataVencimento));
 
-		TypedQuery<LancamentoEstatisticaDia> typedQuery = manager.createQuery(criteriaQuery);
-
-		return typedQuery.getResultList();
+	    return manager.createQuery(cq).getResultList();
 	}
 
 	@Override
-	public List<LancamentoEstatisticaCategoria> porCategoria(LocalDate mesReferencia) {
-		CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
+	public List<LancamentoEstatisticaCategoria> porCategoria(LocalDate dataInicio, LocalDate dataFim) {
+	    CriteriaBuilder cb = manager.getCriteriaBuilder();
 
-		CriteriaQuery<LancamentoEstatisticaCategoria> criteriaQuery = criteriaBuilder
-				.createQuery(LancamentoEstatisticaCategoria.class);
+	    CriteriaQuery<LancamentoEstatisticaCategoria> cq = cb.createQuery(LancamentoEstatisticaCategoria.class);
+	    Root<Lancamento> root = cq.from(Lancamento.class);
 
-		Root<Lancamento> root = criteriaQuery.from(Lancamento.class);
+	    cq.select(cb.construct(
+	            LancamentoEstatisticaCategoria.class,
+	            root.get(Lancamento_.categoria),
+	            cb.sum(root.get(Lancamento_.valor))
+	    ));
 
-		criteriaQuery.select(criteriaBuilder.construct(LancamentoEstatisticaCategoria.class,
-				root.get(Lancamento_.categoria), criteriaBuilder.sum(root.get(Lancamento_.valor))));
+	    Predicate restricoes = cb.conjunction();
 
-		LocalDate primeiroDia = mesReferencia.withDayOfMonth(1);
-		LocalDate ultimoDia = mesReferencia.withDayOfMonth(mesReferencia.lengthOfMonth());
+	    if (dataInicio != null) {
+	        restricoes = cb.and(restricoes,
+	                cb.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataInicio));
+	    }
 
-		criteriaQuery.where(criteriaBuilder.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), primeiroDia),
-				criteriaBuilder.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), ultimoDia));
+	    if (dataFim != null) {
+	        restricoes = cb.and(restricoes,
+	                cb.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataFim));
+	    }
 
-		criteriaQuery.groupBy(root.get(Lancamento_.categoria));
+	    cq.where(restricoes);
+	    cq.groupBy(root.get(Lancamento_.categoria));
 
-		TypedQuery<LancamentoEstatisticaCategoria> typedQuery = manager.createQuery(criteriaQuery);
-
-		return typedQuery.getResultList();
+	    return manager.createQuery(cq).getResultList();
 	}
+
 
 	@Override
 	public Page<Lancamento> filtrar(LancamentoFilter lancamentoFilter, Pageable pageable) {

@@ -68,39 +68,39 @@ public class LancamentoResource {
 
 	@Autowired
 	private MessageSource messageSource;
-	
+
 	@Autowired
-    private ObjectMapper objectMapper;
-	
+	private ObjectMapper objectMapper;
+
 	@PostMapping(value = "/com-anexo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @ApiOperation(value = "Endpoint para cadastrar lançamento com anexo", notes = "Faz o upload de um arquivo (ex: comprovante) e retorna o objeto salvo com informações do anexo.")
-    @PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
-    public ResponseEntity<Lancamento> criarComAnexo(@RequestPart("lancamento") String lancamentoJson, @RequestPart("file") MultipartFile file, HttpServletResponse response) throws IOException {
+	@ApiOperation(value = "Endpoint para cadastrar lançamento com anexo", notes = "Faz o upload de um arquivo (ex: comprovante) e retorna o objeto salvo com informações do anexo.")
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
+	public ResponseEntity<Lancamento> criarComAnexo(@RequestPart("lancamento") String lancamentoJson,
+			@RequestPart("file") MultipartFile file, HttpServletResponse response) throws IOException {
 
-        Lancamento lancamento = objectMapper.readValue(lancamentoJson, Lancamento.class);
+		Lancamento lancamento = objectMapper.readValue(lancamentoJson, Lancamento.class);
 
-        Lancamento lancamentoSalvo = lancamentoService.salvarComAnexo(lancamento, file);
-        publisher.publishEvent(new RecursoCriadoEvent(this, response, lancamentoSalvo.getCodigo()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(lancamentoSalvo);
-    }
-	
+		Lancamento lancamentoSalvo = lancamentoService.salvarComAnexo(lancamento, file);
+		publisher.publishEvent(new RecursoCriadoEvent(this, response, lancamentoSalvo.getCodigo()));
+		return ResponseEntity.status(HttpStatus.CREATED).body(lancamentoSalvo);
+	}
+
 	@GetMapping("/{codigo}/anexo")
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO')")
 	@ApiOperation(value = "Endpoint que faz download do anexo de um lançamento")
 	public ResponseEntity<byte[]> downloadAnexo(@PathVariable Long codigo) {
-	    try {
-	        Anexo anexo = lancamentoService.buscarAnexoDoLancamento(codigo);
+		try {
+			Anexo anexo = lancamentoService.buscarAnexoDoLancamento(codigo);
 
-	        return ResponseEntity.ok()
-	                .contentType(MediaType.parseMediaType(anexo.getTipo()))
-	                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + anexo.getNome() + "\"")
-	                .body(anexo.getDados());
+			return ResponseEntity.ok().contentType(MediaType.parseMediaType(anexo.getTipo()))
+					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + anexo.getNome() + "\"")
+					.body(anexo.getDados());
 
-	    } catch (IllegalArgumentException e) {
-	        return ResponseEntity.notFound().build();
-	    } catch (Exception e) {
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-	    }
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.notFound().build();
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+		}
 	}
 
 	@GetMapping("/relatorios/por-pessoa")
@@ -116,18 +116,36 @@ public class LancamentoResource {
 				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio.pdf").body(relatorio);
 	}
 
-	@GetMapping("/estatisticas/por-dia")
+	@GetMapping(value = "/estatisticas/por-dia", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Endpoint para obter estatísticas de lançamentos por dia", response = List.class)
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
-	public List<LancamentoEstatisticaDia> porDia() {
-		return this.lancamentoRepository.porDia(LocalDate.now());
+	public List<LancamentoEstatisticaDia> porDia(
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+
+		LocalDate hoje = LocalDate.now();
+		LocalDate inicio = (dataInicio != null) ? dataInicio : hoje.withDayOfMonth(1);
+		LocalDate fim = (dataFim != null) ? dataFim : hoje.withDayOfMonth(hoje.lengthOfMonth());
+
+		return this.lancamentoRepository.porDia(inicio, fim);
 	}
 
-	@GetMapping("/estatisticas/por-categoria")
+	@GetMapping(value = "/estatisticas/por-categoria", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Endpoint para obter estatísticas de lançamentos por categoria", response = List.class)
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO') and #oauth2.hasScope('read')")
-	public List<LancamentoEstatisticaCategoria> porCategoria() {
-		return this.lancamentoRepository.porCategoria(LocalDate.now());
+	public List<LancamentoEstatisticaCategoria> porCategoria(
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
+
+		if (dataInicio == null) {
+			dataInicio = LocalDate.now().withDayOfMonth(1);
+		}
+		if (dataFim == null) {
+			dataFim = LocalDate.now();
+		}
+
+		return this.lancamentoRepository.porCategoria(dataInicio, dataFim);
 	}
 
 	@GetMapping
@@ -174,29 +192,29 @@ public class LancamentoResource {
 	@ApiOperation(value = "Endpoint para atualiza apenas o anexo de um lançamento")
 	public ResponseEntity<?> atualizarAnexo(@PathVariable Long codigo, @RequestPart("file") MultipartFile file) {
 
-	    try {
-	        Lancamento lancamentoAtualizado = lancamentoService.atualizarAnexo(codigo, file);
-	        return ResponseEntity.ok(lancamentoAtualizado);
-	    } catch (IOException e) {
-	        return ResponseEntity.badRequest().body("Erro ao processar o anexo: " + e.getMessage());
-	    }
+		try {
+			Lancamento lancamentoAtualizado = lancamentoService.atualizarAnexo(codigo, file);
+			return ResponseEntity.ok(lancamentoAtualizado);
+		} catch (IOException e) {
+			return ResponseEntity.badRequest().body("Erro ao processar o anexo: " + e.getMessage());
+		}
 	}
-	
+
 	@PutMapping("/{codigo}")
 	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO') and #oauth2.hasScope('write')")
 	@ApiOperation(value = "Atualiza os dados de um lançamento")
 	public ResponseEntity<Lancamento> atualizar(@PathVariable Long codigo, @Valid @RequestBody Lancamento lancamento) {
-	    lancamento.setCodigo(codigo);
-	    Lancamento lancamentoAtualizado = lancamentoService.atualizar(lancamento);
-	    return ResponseEntity.ok(lancamentoAtualizado);
+		lancamento.setCodigo(codigo);
+		Lancamento lancamentoAtualizado = lancamentoService.atualizar(lancamento);
+		return ResponseEntity.ok(lancamentoAtualizado);
 	}
-	
+
 	@DeleteMapping("/{codigo}/anexo")
 	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_LANCAMENTO')")
 	@ApiOperation(value = "Endpoint que remove o anexo de um lançamento")
 	public ResponseEntity<Void> deletarAnexo(@PathVariable Long codigo) {
-	    lancamentoService.removerAnexo(codigo);
-	    return ResponseEntity.noContent().build();
+		lancamentoService.removerAnexo(codigo);
+		return ResponseEntity.noContent().build();
 	}
 
 	@ExceptionHandler({ PessoaInexistenteOuInativaException.class })
