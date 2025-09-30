@@ -3,6 +3,7 @@ package br.com.guifroes1984.api.pagamentos.service;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +33,19 @@ public class AnexoService {
 			throw new IllegalArgumentException("Anexo não encontrado");
 		}
 		anexoRepository.deleteById(id);
+	}
+
+	public Anexo atualizar(Long codigo, MultipartFile file) throws IOException {
+		Anexo anexo = buscarAnexoExistente(codigo);
+		anexo.setNome(file.getOriginalFilename());
+		anexo.setTipo(file.getContentType());
+		anexo.setDados(file.getBytes());
+		return anexoRepository.save(anexo);
+	}
+
+	private Anexo buscarAnexoExistente(Long codigo) {
+		return anexoRepository.findById(codigo)
+				.orElseThrow(() -> new EmptyResultDataAccessException(1));
 	}
 
 }

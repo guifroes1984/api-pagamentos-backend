@@ -22,6 +22,7 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import br.com.guifroes1984.api.pagamentos.service.exception.ArquivoInvalidoException;
 import br.com.guifroes1984.api.pagamentos.service.exception.CredenciaisInvalidasException;
 import br.com.guifroes1984.api.pagamentos.service.exception.EmailJaCadastradoException;
 
@@ -100,6 +101,14 @@ public class ExceptionHandler extends ResponseEntityExceptionHandler {
 	public ResponseEntity<Object> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex, WebRequest request) {
 	    String mensagemUsuario = messageSource.getMessage("arquivo.muito-grande", null, LocaleContextHolder.getLocale());
 	    String mensagemDesenvolvedor = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
+	    List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
+	    return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+	}
+	
+	@org.springframework.web.bind.annotation.ExceptionHandler(ArquivoInvalidoException.class)
+	public ResponseEntity<Object> handleArquivoInvalidoException(ArquivoInvalidoException ex, WebRequest request) {
+	    String mensagemUsuario = messageSource.getMessage("arquivo.invalido", null, LocaleContextHolder.getLocale());
+	    String mensagemDesenvolvedor = ex.toString();
 	    List<Erro> erros = Arrays.asList(new Erro(mensagemUsuario, mensagemDesenvolvedor));
 	    return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
 	}

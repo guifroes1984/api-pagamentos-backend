@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +28,7 @@ import br.com.guifroes1984.api.pagamentos.repository.AnexoRepository;
 import br.com.guifroes1984.api.pagamentos.repository.LancamentoRepository;
 import br.com.guifroes1984.api.pagamentos.repository.PessoaRepository;
 import br.com.guifroes1984.api.pagamentos.repository.UsuarioRepository;
+import br.com.guifroes1984.api.pagamentos.service.exception.ArquivoInvalidoException;
 import br.com.guifroes1984.api.pagamentos.service.exception.PessoaInexistenteOuInativaException;
 import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -39,6 +41,8 @@ public class LancamentoService {
 	private static final String DESTINATARIOS = "ROLE_PESQUISAR_LANCAMENTO";
 
 	private static final Logger logger = LoggerFactory.getLogger(LancamentoService.class);
+	
+	private static final List<String> TIPOS_PERMITIDOS = Arrays.asList( "application/pdf", "image/jpeg");
 
 	@Autowired
 	private PessoaRepository pessoaRepository;
@@ -57,6 +61,15 @@ public class LancamentoService {
 
 	@Autowired
 	private AnexoRepository anexoRepository;
+	
+	private void validarTipoArquivo(MultipartFile file) {
+		if (file == null || file.isEmpty()) {
+			throw new IllegalArgumentException("Arquivo não pode estar vazio");
+		}
+		if (!TIPOS_PERMITIDOS.contains(file.getContentType())) {
+			throw new IllegalArgumentException("Somente arquivos PDF ou JPG são permitidos.");
+		}
+	}
 
 	@Scheduled(cron = "0 0 6 * * *") /*
 										 * Metodo de agendamento para execução. No caso aqui está todos os dia a 6h da
@@ -130,6 +143,7 @@ public class LancamentoService {
 		validarPessoaAtiva(lancamento.getPessoa().getCodigo());
 
 		if (file != null && !file.isEmpty()) {
+			validarTipoArquivo(file);
 			Anexo anexo = anexoService.salvar(file);
 			lancamento.setAnexo(anexo);
 		}
@@ -145,6 +159,10 @@ public class LancamentoService {
 	}
 
 	public Lancamento atualizarAnexo(Long codigo, MultipartFile file) throws IOException {
+		if (file == null || file.isEmpty()) {
+			throw new ArquivoInvalidoException("Arquivo vazio ou inexistente");
+		}
+		
 		Lancamento lancamentoSalvo = buscarLancamentoExistente(codigo);
 
 		Anexo anexo = lancamentoSalvo.getAnexo();
@@ -153,11 +171,8 @@ public class LancamentoService {
 			anexo = anexoService.salvar(file);
 			lancamentoSalvo.setAnexo(anexo);
 		} else {
-			anexo.setNome(file.getOriginalFilename());
-			anexo.setTipo(file.getContentType());
-			anexo.setDados(file.getBytes());
-
-			anexoRepository.save(anexo);
+			anexo = anexoService.atualizar(anexo.getCodigo(), file);
+	        lancamentoSalvo.setAnexo(anexo);
 		}
 
 		return lancamentoRepository.save(lancamentoSalvo);
@@ -178,7 +193,7 @@ public class LancamentoService {
 		Lancamento lancamento = lancamentoRepository.findById(codigoLancamento)
 				.orElseThrow(() -> new IllegalArgumentException("Lançamento não encontrado"));
 
-		Anexo anexo = lancamento.getAnexo(); // Supondo que existe getAnexo()
+		Anexo anexo = lancamento.getAnexo();
 		if (anexo == null) {
 			throw new IllegalArgumentException("Lançamento não possui anexo");
 		}

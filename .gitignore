@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignorar arquivos da IDE (STS/Eclipse)
+.metadata/
+*.log
+bin/
+.settings/
+.classpath
+.project
