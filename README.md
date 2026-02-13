@@ -39,3 +39,27 @@ Authorization: Bearer {token}
 ## ▶️ Como rodar o projeto
 
 1. Clonar repositório:
+git clone https://github.com/guifroes1984/api-pagamentos-backend.git
+
+
+2. Entrar na pasta:
+cd api-pagamentos-backend
+
+
+3. Rodar:
+mvn spring-boot:run
+
+
+A aplicação estará disponível em:
+http://localhost:8080
+
+
+Swagger:
+http://localhost:8080/swagger-ui.html
+
+
+---
+
+## 👨‍💻 Autor
+
+Guilherme Fróes
