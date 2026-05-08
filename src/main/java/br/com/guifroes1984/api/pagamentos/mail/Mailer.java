@@ -83,7 +83,7 @@ public class Mailer {
 	}
 
 	public void enviarEmail(String remetente, List<String> destinatarios, String assunto, String mensagem) {
-
+		
 		try {
 			MimeMessage mimeMessage = mailSender.createMimeMessage();
 
@@ -94,7 +94,8 @@ public class Mailer {
 			helper.setText(mensagem, true);
 
 			mailSender.send(mimeMessage);
-		} catch (MessagingException e) {
+		} catch (Exception e) {
+			e.printStackTrace();
 			throw new RuntimeException("Problemas com o envio de e-mail!", e);
 		}
 	}

@@ -47,7 +47,7 @@ public class PessoaResources {
 	@GetMapping
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_PESSOA')")
 	@Operation(summary = "Endpoint para listar todas as pessoas com filtro opcional por nome")
-	public Page<Pessoa> pequisar(@RequestParam(required = false, defaultValue = "%") String nome, Pageable pePageable) {
+	public Page<Pessoa> pequisar(@RequestParam(required = false, defaultValue = "") String nome, Pageable pePageable) {
 		return pessoaRepository.findByNomeContaining(nome, pePageable);
 	}
 
@@ -71,7 +71,7 @@ public class PessoaResources {
 	@DeleteMapping("/{codigo}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	@Operation(summary = "Endpoint para remover uma pessoa pelo código", description = "Exclui a pessoa do banco de dados pelo código informado.")
-	@PreAuthorize("hasAuthority('ROLE_REMOVER_PESSOA') and #oauth2.hasScope('write')")
+	@PreAuthorize("hasAuthority('ROLE_REMOVER_PESSOA')")
 	public void remover(@PathVariable Long codigo) {
 		pessoaRepository.deleteById(codigo);
 	}
