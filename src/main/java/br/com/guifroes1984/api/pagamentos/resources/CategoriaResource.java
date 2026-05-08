@@ -24,12 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.guifroes1984.api.pagamentos.event.RecursoCriadoEvent;
 import br.com.guifroes1984.api.pagamentos.model.Categoria;
 import br.com.guifroes1984.api.pagamentos.repository.CategoriaRepository;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/categorias")
-@Api(value = "Categoria", description = "Operações relacionadas às categorias")
+@Tag(name = "Categoria", description = "Operações relacionadas às categorias")
 public class CategoriaResource {
 
 	@Autowired
@@ -39,15 +39,15 @@ public class CategoriaResource {
 	private ApplicationEventPublisher publisher;
 
 	@GetMapping
-	@ApiOperation(value = "Endpoint para listar todas as categorias", response = List.class)
+	@Operation(summary = "Endpoint para listar todas as categorias")
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_CATEGORIA') and #oauth2.hasScope('read')")
 	public List<Categoria> listar() {
 		return categoriaRepository.findAll();
 	}
 
 	@PostMapping
-	@ApiOperation(value = "Endpoint para adicionar uma nova categoria")
-	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_CATEGORIA') and #oauth2.hasScope('write')")
+	@Operation(summary = "Endpoint para adicionar uma nova categoria")
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_CATEGORIA')")
 	public ResponseEntity<Categoria> adicionar(@Valid @RequestBody Categoria categoria, HttpServletResponse response) {
 		Categoria categoriaSalva = categoriaRepository.save(categoria);
 		publisher.publishEvent(new RecursoCriadoEvent(this, response, categoriaSalva.getCodigo()));
@@ -55,16 +55,16 @@ public class CategoriaResource {
 	}
 
 	@GetMapping("/{codigo}")
-	@ApiOperation(value = "Endpoint para buscar uma categoria pelo código", response = Categoria.class)
-	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_CATEGORIA') and #oauth2.hasScope('read')")
+	@Operation(summary = "Endpoint para buscar uma categoria pelo código")
+	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_CATEGORIA')")
 	public ResponseEntity<Categoria> buscarPeloCodigo(@PathVariable Long codigo) {
 		Optional<Categoria> categoria = categoriaRepository.findById(codigo);
 		return categoria.isPresent() ? ResponseEntity.ok(categoria.get()) : ResponseEntity.notFound().build();
 	}
 
 	@PutMapping("/{codigo}")
-	@ApiOperation(value = "Endpoint para atualizar uma categoria")
-	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_CATEGORIA') and #oauth2.hasScope('write')")
+	@Operation(summary = "Endpoint para atualizar uma categoria")
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_CATEGORIA')")
 	public ResponseEntity<Categoria> atualizar(@PathVariable Long codigo, @Valid @RequestBody Categoria categoria) {
 		Optional<Categoria> categoriaOptional = categoriaRepository.findById(codigo);
 
@@ -81,8 +81,8 @@ public class CategoriaResource {
 
 	@DeleteMapping("/{codigo}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	@ApiOperation(value = "Endpoint para remover uma categoria")
-	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_CATEGORIA') and #oauth2.hasScope('write')")
+	@Operation(summary = "Endpoint para remover uma categoria")
+	@PreAuthorize("hasAuthority('ROLE_CADASTRAR_CATEGORIA')")
 	public void remover(@PathVariable Long codigo) {
 		categoriaRepository.deleteById(codigo);
 	}

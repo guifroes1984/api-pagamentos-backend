@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.guifroes1984.api.pagamentos.model.Cidade;
 import br.com.guifroes1984.api.pagamentos.repository.CidadeRepository;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/cidades")
-@Api(value = "Estado", description = "Operações relacionadas aos cidades")
+@Tag(name = "Estado", description = "Operações relacionadas aos cidades")
 public class CidadeResource {
 	
 	@Autowired
@@ -24,7 +24,7 @@ public class CidadeResource {
 	
 	@GetMapping
 	@PreAuthorize("isAuthenticated()")
-	@ApiOperation(value = "Endpoint que retorna a lista de todos as cidades", response = List.class)
+	@Operation(summary = "Endpoint que retorna a lista de todos as cidades")
 	public List<Cidade> pesquisar(@RequestParam Long estado) {
 		return cidadeRepository.findByEstadoCodigo(estado);
 	}

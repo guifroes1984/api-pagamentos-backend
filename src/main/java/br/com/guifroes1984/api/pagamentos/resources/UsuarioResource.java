@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.guifroes1984.api.pagamentos.model.Usuario;
 import br.com.guifroes1984.api.pagamentos.service.UsuarioService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/usuarios")
-@Api(value = "Usuario", description = "Operações relacionadas aos cadastro de usuários")
+@Tag(name = "Usuario", description = "Operações relacionadas aos cadastro de usuários")
 public class UsuarioResource {
 	
 	@Autowired
@@ -23,7 +23,7 @@ public class UsuarioResource {
 
 	
 	@PostMapping
-	@ApiOperation(value = "Cadastra um novo usuário")
+	@Operation(summary = "Cadastra um novo usuário")
 	public ResponseEntity<?> cadastrar(@RequestBody Usuario usuario) {
 		Usuario usuarioSalvo = usuarioService.cadastrarUsuario(usuario);
 		return ResponseEntity.status(HttpStatus.CREATED).body(usuarioSalvo);

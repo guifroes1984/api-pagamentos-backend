@@ -6,12 +6,15 @@ API REST desenvolvida para gerenciamento de pagamentos com autenticação JWT.
 
 ## 🚀 Tecnologias
 
-- Java 8
-- Spring Boot
+- Java 17
+- Spring Boot 2.7
 - Spring Security
 - JWT
-- JPA / Hibernate
+- Spring Data JPA / Hibernate
+- MySQL
+- Flyway
 - Maven
+- Swagger / OpenAPI
 
 ---
 
@@ -20,9 +23,13 @@ API REST desenvolvida para gerenciamento de pagamentos com autenticação JWT.
 Simular uma API de pagamentos com:
 
 - Cadastro de usuários
-- Login com JWT
-- Registro de pagamentos
+- Autenticação com JWT
 - Controle de acesso por perfil
+- Cadastro de categorias
+- Cadastro de pessoas
+- Controle de lançamentos financeiros
+- Upload de anexos
+- Relatórios PDF
 
 ---
 
@@ -55,11 +62,11 @@ http://localhost:8080
 
 
 Swagger:
-http://localhost:8080/swagger-ui.html
+http://localhost:8080/swagger-ui/index.html
 
 
 ---
 
 ## 👨‍💻 Autor
 
-Guilherme Fróes
+Guilherme Froes

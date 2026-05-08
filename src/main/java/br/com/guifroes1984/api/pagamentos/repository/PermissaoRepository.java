@@ -11,6 +11,6 @@ public interface PermissaoRepository extends JpaRepository<Permissao, Long> {
 	
 	Optional<Permissao> findByDescricao(String descricao);
 	
-	List<Permissao> findByDescricao(List<String> descricoes);
+	List<Permissao> findByDescricaoIn(List<String> descricoes);
 
 }

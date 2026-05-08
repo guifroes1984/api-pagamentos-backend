@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.guifroes1984.api.pagamentos.model.Estado;
 import br.com.guifroes1984.api.pagamentos.repository.EstadoRepository;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/estados")
-@Api(value = "Estado", description = "Operações relacionadas aos estados")
+@Tag(name = "Estado", description = "Operações relacionadas aos estados")
 public class EstadoResource {
 	
 	@Autowired
@@ -23,7 +23,7 @@ public class EstadoResource {
 	
 	@GetMapping
 	@PreAuthorize("isAuthenticated()")
-	@ApiOperation(value = "Endpoint que retorna a lista de todos os estados", response = List.class)
+	@Operation(summary = "Endpoint que retorna a lista de todos os estados")
 	public List<Estado> listar() {
 		return estadoRepository.findAll();
 	}

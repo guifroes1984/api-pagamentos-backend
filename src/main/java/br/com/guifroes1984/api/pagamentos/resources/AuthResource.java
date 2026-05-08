@@ -19,12 +19,12 @@ import br.com.guifroes1984.api.pagamentos.model.PasswordResetToken;
 import br.com.guifroes1984.api.pagamentos.model.Usuario;
 import br.com.guifroes1984.api.pagamentos.repository.PasswordResetTokenRepository;
 import br.com.guifroes1984.api.pagamentos.repository.UsuarioRepository;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/auth")
-@Api(value = "Autenticação", description = "Endpoints para recuperação e redefinição de senha")
+@Tag(name = "Autenticação", description = "Endpoints para recuperação e redefinição de senha")
 public class AuthResource {
 
 	@Autowired
@@ -40,13 +40,13 @@ public class AuthResource {
 	private UsuarioRepository usuarioRepository;
 
 	@PostMapping("/esqueci-senha")
-	@ApiOperation(value = "Solicitar recuperação de senha", notes = "Envia um e-mail com link para redefinição de senha para o usuário", response = Void.class)
+	@Operation(summary = "Solicitar recuperação de senha", description = "Envia um e-mail com link para redefinição de senha para o usuário")
 	public ResponseEntity<Void> esqueciSenha(@RequestBody EsqueciSenhaDTO esqueciSenhaDTO) {
 		mailer.solicitarResetDeSenha(esqueciSenhaDTO.getEmail());
 		return ResponseEntity.noContent().build();
 	}
 
-	@ApiOperation(value = "Redefinir senha com token", notes = "Permite redefinir a senha de um usuário utilizando um token enviado por e-mail", response = Void.class)
+	@Operation(summary = "Redefinir senha com token", description = "Permite redefinir a senha utilizando um token enviado por e-mail")
 	@PostMapping("/resetar-senha")
 	public ResponseEntity<Void> resetarSenha(@RequestBody ResetarSenhaDTO resetarSenhaDTO) {
 		PasswordResetToken token = tokenRepository.findByToken(resetarSenhaDTO.getToken())
