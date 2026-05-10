@@ -21,6 +21,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +45,9 @@ import br.com.guifroes1984.api.pagamentos.event.RecursoCriadoEvent;
 import br.com.guifroes1984.api.pagamentos.exceptionhandler.ExceptionHandler.Erro;
 import br.com.guifroes1984.api.pagamentos.model.Anexo;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
+import br.com.guifroes1984.api.pagamentos.model.Usuario;
 import br.com.guifroes1984.api.pagamentos.repository.LancamentoRepository;
+import br.com.guifroes1984.api.pagamentos.repository.UsuarioRepository;
 import br.com.guifroes1984.api.pagamentos.repository.filter.LancamentoFilter;
 import br.com.guifroes1984.api.pagamentos.repository.projection.ResumoLancamento;
 import br.com.guifroes1984.api.pagamentos.service.LancamentoService;
@@ -61,6 +65,9 @@ public class LancamentoResource {
 
 	@Autowired
 	private LancamentoService lancamentoService;
+
+	@Autowired
+	private UsuarioRepository usuarioRepository;
 
 	@Autowired
 	private ApplicationEventPublisher publisher;
@@ -173,7 +180,7 @@ public class LancamentoResource {
 	@PreAuthorize("hasAuthority('ROLE_PESQUISAR_LANCAMENTO')")
 	public Page<Lancamento> pesquisar(LancamentoFilter lancamentoFilter, Pageable pageable) {
 
-		return lancamentoRepository.filtrar(lancamentoFilter, pageable);
+	    return lancamentoRepository.filtrar(lancamentoFilter, pageable);
 	}
 
 	@GetMapping(params = "resumo")

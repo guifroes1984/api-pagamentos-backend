@@ -8,6 +8,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
@@ -25,6 +26,18 @@ public class Usuario {
 	@JoinTable(name = "usuario_permissao", joinColumns = @JoinColumn(name = "codigo_usuario")
 		, inverseJoinColumns = @JoinColumn(name = "codigo_permissao"))
 	private List<Permissao> permissoes;
+	
+	@ManyToOne
+	@JoinColumn(name = "codigo_pessoa")
+	private Pessoa pessoa;
+	
+	public Pessoa getPessoa() {
+		return pessoa;
+	}
+	
+	public void setPessoa(Pessoa pessoa) {
+		this.pessoa = pessoa;
+	}
 
 	public Long getCodigo() {
 		return codigo;

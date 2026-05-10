@@ -28,6 +28,7 @@ import br.com.guifroes1984.api.pagamentos.repository.AnexoRepository;
 import br.com.guifroes1984.api.pagamentos.repository.LancamentoRepository;
 import br.com.guifroes1984.api.pagamentos.repository.PessoaRepository;
 import br.com.guifroes1984.api.pagamentos.repository.UsuarioRepository;
+import br.com.guifroes1984.api.pagamentos.security.util.SecurityUtil;
 import br.com.guifroes1984.api.pagamentos.service.exception.ArquivoInvalidoException;
 import br.com.guifroes1984.api.pagamentos.service.exception.PessoaInexistenteOuInativaException;
 import net.sf.jasperreports.engine.JasperExportManager;
@@ -123,7 +124,16 @@ public class LancamentoService {
 	}
 
 	public Lancamento salvar(Lancamento lancamento) {
+		
 		validarPessoaAtiva(lancamento.getPessoa().getCodigo());
+		
+		String email = SecurityUtil.getEmailUsuarioLogado();
+		
+		Usuario usuario = usuarioRepository.findByEmail(email)
+				.orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+		
+		lancamento.setUsuario(usuario);
+		
 		return lancamentoRepository.save(lancamento);
 	}
 
@@ -140,7 +150,15 @@ public class LancamentoService {
 	}
 
 	public Lancamento salvarComAnexo(Lancamento lancamento, MultipartFile file) throws IOException {
+		
 		validarPessoaAtiva(lancamento.getPessoa().getCodigo());
+		
+		String email = SecurityUtil.getEmailUsuarioLogado();
+		
+		Usuario usuario = usuarioRepository.findByEmail(email)
+				.orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+		
+		lancamento.setUsuario(usuario);
 
 		if (file != null && !file.isEmpty()) {
 			validarTipoArquivo(file);

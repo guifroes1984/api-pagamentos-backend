@@ -9,12 +9,16 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 
 import br.com.guifroes1984.api.pagamentos.dto.LancamentoEstatisticaCategoria;
@@ -24,6 +28,7 @@ import br.com.guifroes1984.api.pagamentos.model.Categoria_;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento;
 import br.com.guifroes1984.api.pagamentos.model.Lancamento_;
 import br.com.guifroes1984.api.pagamentos.model.Pessoa_;
+import br.com.guifroes1984.api.pagamentos.model.Usuario;
 import br.com.guifroes1984.api.pagamentos.repository.filter.LancamentoFilter;
 import br.com.guifroes1984.api.pagamentos.repository.projection.ResumoLancamento;
 
@@ -31,7 +36,7 @@ public class LancamentoRepositoryImpl implements LancamentoRepositoryQuery {
 
 	@PersistenceContext
 	private EntityManager manager;
-	
+
 	@Override
 	public List<LancamentoEstatisticaPessoa> porPessoa(LocalDate inicio, LocalDate fim) {
 		CriteriaBuilder criteriaBuilder = manager.getCriteriaBuilder();
@@ -41,88 +46,70 @@ public class LancamentoRepositoryImpl implements LancamentoRepositoryQuery {
 
 		Root<Lancamento> root = criteriaQuery.from(Lancamento.class);
 
-		criteriaQuery.select(criteriaBuilder.construct(LancamentoEstatisticaPessoa.class,
-				root.get(Lancamento_.tipo), 
-				root.get(Lancamento_.pessoa),
-				criteriaBuilder.sum(root.get(Lancamento_.valor))));
+		criteriaQuery.select(criteriaBuilder.construct(LancamentoEstatisticaPessoa.class, root.get(Lancamento_.tipo),
+				root.get(Lancamento_.pessoa), criteriaBuilder.sum(root.get(Lancamento_.valor))));
 
+		criteriaQuery.where(criteriaBuilder.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), inicio),
+				criteriaBuilder.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), fim));
 
-		criteriaQuery.where(criteriaBuilder.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), 
-						inicio),
-				criteriaBuilder.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), 
-						fim));
-
-		criteriaQuery.groupBy(root.get(Lancamento_.tipo), 
-				root.get(Lancamento_.pessoa));
+		criteriaQuery.groupBy(root.get(Lancamento_.tipo), root.get(Lancamento_.pessoa));
 
 		TypedQuery<LancamentoEstatisticaPessoa> typedQuery = manager.createQuery(criteriaQuery);
 
 		return typedQuery.getResultList();
 	}
-	
+
 	@Override
 	public List<LancamentoEstatisticaDia> porDia(LocalDate dataInicio, LocalDate dataFim) {
-	    CriteriaBuilder cb = manager.getCriteriaBuilder();
+		CriteriaBuilder cb = manager.getCriteriaBuilder();
 
-	    CriteriaQuery<LancamentoEstatisticaDia> cq = cb.createQuery(LancamentoEstatisticaDia.class);
-	    Root<Lancamento> root = cq.from(Lancamento.class);
+		CriteriaQuery<LancamentoEstatisticaDia> cq = cb.createQuery(LancamentoEstatisticaDia.class);
+		Root<Lancamento> root = cq.from(Lancamento.class);
 
-	    cq.select(cb.construct(
-	            LancamentoEstatisticaDia.class,
-	            root.get(Lancamento_.tipo),
-	            root.get(Lancamento_.dataVencimento),
-	            cb.sum(root.get(Lancamento_.valor))
-	    ));
+		cq.select(cb.construct(LancamentoEstatisticaDia.class, root.get(Lancamento_.tipo),
+				root.get(Lancamento_.dataVencimento), cb.sum(root.get(Lancamento_.valor))));
 
-	    Predicate restricoes = cb.conjunction();
+		Predicate restricoes = cb.conjunction();
 
-	    if (dataInicio != null) {
-	        restricoes = cb.and(restricoes,
-	                cb.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataInicio));
-	    }
+		if (dataInicio != null) {
+			restricoes = cb.and(restricoes, cb.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataInicio));
+		}
 
-	    if (dataFim != null) {
-	        restricoes = cb.and(restricoes,
-	                cb.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataFim));
-	    }
+		if (dataFim != null) {
+			restricoes = cb.and(restricoes, cb.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataFim));
+		}
 
-	    cq.where(restricoes);
-	    cq.groupBy(root.get(Lancamento_.tipo), root.get(Lancamento_.dataVencimento));
+		cq.where(restricoes);
+		cq.groupBy(root.get(Lancamento_.tipo), root.get(Lancamento_.dataVencimento));
 
-	    return manager.createQuery(cq).getResultList();
+		return manager.createQuery(cq).getResultList();
 	}
 
 	@Override
 	public List<LancamentoEstatisticaCategoria> porCategoria(LocalDate dataInicio, LocalDate dataFim) {
-	    CriteriaBuilder cb = manager.getCriteriaBuilder();
+		CriteriaBuilder cb = manager.getCriteriaBuilder();
 
-	    CriteriaQuery<LancamentoEstatisticaCategoria> cq = cb.createQuery(LancamentoEstatisticaCategoria.class);
-	    Root<Lancamento> root = cq.from(Lancamento.class);
+		CriteriaQuery<LancamentoEstatisticaCategoria> cq = cb.createQuery(LancamentoEstatisticaCategoria.class);
+		Root<Lancamento> root = cq.from(Lancamento.class);
 
-	    cq.select(cb.construct(
-	            LancamentoEstatisticaCategoria.class,
-	            root.get(Lancamento_.categoria),
-	            cb.sum(root.get(Lancamento_.valor))
-	    ));
+		cq.select(cb.construct(LancamentoEstatisticaCategoria.class, root.get(Lancamento_.categoria),
+				cb.sum(root.get(Lancamento_.valor))));
 
-	    Predicate restricoes = cb.conjunction();
+		Predicate restricoes = cb.conjunction();
 
-	    if (dataInicio != null) {
-	        restricoes = cb.and(restricoes,
-	                cb.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataInicio));
-	    }
+		if (dataInicio != null) {
+			restricoes = cb.and(restricoes, cb.greaterThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataInicio));
+		}
 
-	    if (dataFim != null) {
-	        restricoes = cb.and(restricoes,
-	                cb.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataFim));
-	    }
+		if (dataFim != null) {
+			restricoes = cb.and(restricoes, cb.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento), dataFim));
+		}
 
-	    cq.where(restricoes);
-	    cq.groupBy(root.get(Lancamento_.categoria));
+		cq.where(restricoes);
+		cq.groupBy(root.get(Lancamento_.categoria));
 
-	    return manager.createQuery(cq).getResultList();
+		return manager.createQuery(cq).getResultList();
 	}
-
 
 	@Override
 	public Page<Lancamento> filtrar(LancamentoFilter lancamentoFilter, Pageable pageable) {
@@ -178,6 +165,19 @@ public class LancamentoRepositoryImpl implements LancamentoRepositoryQuery {
 		if (lancamentoFilter.getDataVencimentoAte() != null) {
 			predicates.add(builder.lessThanOrEqualTo(root.get(Lancamento_.dataVencimento),
 					lancamentoFilter.getDataVencimentoAte()));
+		}
+
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		boolean admin = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+		if (!admin) {
+
+			String email = authentication.getName();
+
+			Join<Lancamento, Usuario> usuarioJoin = root.join("usuario", JoinType.LEFT);
+
+			predicates.add(builder.equal(usuarioJoin.get("email"), email));
 		}
 
 		return predicates.toArray(new Predicate[predicates.size()]);

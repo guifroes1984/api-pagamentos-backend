@@ -66,6 +66,18 @@ public class Lancamento {
 	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "codigo_anexo")
 	private Anexo anexo;
+	
+	@ManyToOne
+	@JoinColumn(name = "codigo_usuario")
+	private Usuario usuario;
+	
+	public Usuario getUsuario() {
+		return usuario;
+	}
+	
+	public void setUsuario(Usuario usuario) {
+		this.usuario = usuario;
+	}
 
 	public Anexo getAnexo() {
 		return anexo;
